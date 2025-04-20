@@ -38,10 +38,10 @@ class _HomeScreenState extends State<HomeScreen> {
  // Initialize with the current date or a default like April 2025 from the image
  DateTime _currentMonth = DateTime(2025, 4); // April 2025
 
- // Access shared expense data 
- List<Expense> get _expenses => main_data.sharedExpenses;
+ // Get expenses filtered by the selected month
+ List<Expense> get _expenses => main_data.getExpensesForMonth(_currentMonth);
 
- // Calculate the total spent from the expenses
+ // Calculate the total spent from the filtered expenses
  double get _totalSpent => _expenses.fold(0.0, (sum, expense) => sum + expense.amount);
 
  // --- State Management Methods ---
@@ -69,16 +69,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   if (result != null) {
    setState(() {
-    _expenses.add(result);
+    main_data.sharedExpenses.add(result);
    });
   }
  }
 
  Future<void> _handleEditExpense(String id) async {
-  final expenseIndex = _expenses.indexWhere((e) => e.id == id);
-  if (expenseIndex == -1) return;
-
-  final expense = _expenses[expenseIndex];
+  final expense = main_data.sharedExpenses.firstWhere((e) => e.id == id);
   final result = await showDialog<Expense>(
    context: context,
    builder: (context) => AddExpenseDialog(
@@ -90,7 +87,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   if (result != null) {
    setState(() {
-    _expenses[expenseIndex] = result;
+    final index = main_data.sharedExpenses.indexWhere((e) => e.id == id);
+    main_data.sharedExpenses[index] = result;
    });
   }
  }
@@ -118,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ).then((confirmed) {
    if (confirmed ?? false) {
     setState(() {
-     _expenses.removeWhere((e) => e.id == id);
+     main_data.sharedExpenses.removeWhere((e) => e.id == id);
     });
    }
   });
@@ -206,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Padding(
                 padding: EdgeInsets.only(top: 32.0),
                 child: Text(
-                  'No expenses yet. Add one to get started.',
+                  'No expenses for this month. Add one to get started.',
                   style: TextStyle(
                     color: AppColors.darkGrey,
                     fontSize: 16,

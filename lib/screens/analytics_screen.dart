@@ -16,8 +16,8 @@ class AnalyticsScreen extends StatefulWidget {
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   DateTime _currentMonth = DateTime(2025, 4);
   
-  // Access shared data
-  List<Expense> get _expenses => main_data.sharedExpenses;
+  // Get expenses filtered by the selected month
+  List<Expense> get _expenses => main_data.getExpensesForMonth(_currentMonth);
   
   void _handlePreviousMonth() {
     setState(() {
@@ -47,6 +47,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     'Transport': AppColors.primaryBlue,
     'Food': Colors.orange,
     'Entertainment': Colors.purple,
+    'Shopping': Colors.red,
     'Utilities': Colors.teal,
     'Other': Colors.amber,
   };
@@ -125,7 +126,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       const SizedBox(height: 16),
                       Expanded(
                         child: _spendingByCategory.isEmpty
-                          ? const Center(child: Text('No expenses yet'))
+                          ? const Center(child: Text('No expenses for this month'))
                           : Row(
                               children: [
                                 // Pie Chart

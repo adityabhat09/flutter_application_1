@@ -20,6 +20,7 @@ class AppColors {
 
 // Shared expense data
 final List<Expense> sharedExpenses = [
+  // April 2025 expenses - total $66
   Expense(
     id: '1',
     title: 'breakfast',
@@ -41,9 +42,50 @@ final List<Expense> sharedExpenses = [
     date: DateTime(2025, 4, 18),
     category: 'Transport',
   ),
+  
+  // February 2025 expenses - total $0 (empty)
+  
+  // December 2024 expenses - total $234
+  Expense(
+    id: '4',
+    title: 'Holiday Gifts',
+    amount: 150.00,
+    date: DateTime(2024, 12, 20),
+    category: 'Shopping',
+  ),
+  Expense(
+    id: '5',
+    title: 'Christmas Dinner',
+    amount: 84.00,
+    date: DateTime(2024, 12, 25),
+    category: 'Food',
+  ),
 ];
 
 double sharedBudget = 200.00;
+
+// Function to get expenses for a specific month
+List<Expense> getExpensesForMonth(DateTime month) {
+  return sharedExpenses.where((expense) {
+    return expense.date.year == month.year && expense.date.month == month.month;
+  }).toList();
+}
+
+// Function to get total spending by month for the last 6 months
+Map<DateTime, double> getMonthlySpending() {
+  final now = DateTime(2025, 4); // Using April 2025 as the current month for this example
+  final result = <DateTime, double>{};
+  
+  // Get data for the last 6 months
+  for (int i = 0; i < 6; i++) {
+    final month = DateTime(now.year, now.month - i);
+    final expenses = getExpensesForMonth(month);
+    final total = expenses.fold(0.0, (sum, expense) => sum + expense.amount);
+    result[month] = total;
+  }
+  
+  return result;
+}
 
 void main() {
   runApp(const MyApp());
