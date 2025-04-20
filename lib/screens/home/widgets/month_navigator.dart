@@ -19,26 +19,26 @@ class MonthNavigator extends StatelessWidget {
     final String formattedMonth = DateFormat('MMMM yyyy').format(currentMonth);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+      padding: const EdgeInsets.all(16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: onPreviousMonth,
-            tooltip: 'Previous Month',
+            iconSize: 28,
           ),
           Text(
             formattedMonth,
             style: const TextStyle(
-              fontSize: 18.0,
-              fontWeight: FontWeight.bold,
+              fontSize: 16.0,
+              fontWeight: FontWeight.w500,
             ),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: onNextMonth,
-            tooltip: 'Next Month',
+            iconSize: 28,
           ),
         ],
       ),

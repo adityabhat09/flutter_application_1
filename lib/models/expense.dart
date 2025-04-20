@@ -6,14 +6,28 @@ class Expense {
   final double amount;
   final DateTime date;
   final String category;
-  final IconData icon;
 
-  Expense({
+  const Expense({
     required this.id,
     required this.title,
     required this.amount,
     required this.date,
     required this.category,
-    required this.icon,
   });
+
+  Expense copyWith({
+    String? id,
+    String? title,
+    double? amount,
+    DateTime? date,
+    String? category,
+  }) {
+    return Expense(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      category: category ?? this.category,
+    );
+  }
 }

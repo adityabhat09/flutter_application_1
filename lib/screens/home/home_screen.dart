@@ -9,15 +9,17 @@ import '../../constants/app_colors.dart';
 import 'widgets/month_navigator.dart';
 import 'widgets/budget_summary_card.dart';
 import 'widgets/expense_list_item.dart';
+import 'widgets/add_expense_dialog.dart';
+import '../../main.dart' as main_data;
 
 // Removed duplicate Expense class definition
 
 // Using the imported Expense class to define dummy data
 final List<Expense> dummyExpenses = [
-  Expense(id: 'e1', title: 'Groceries', amount: 550.75, date: DateTime(2025, 4, 19), category: 'Food', icon: Icons.shopping_cart),
-  Expense(id: 'e2', title: 'Electricity Bill', amount: 1200.00, date: DateTime(2025, 4, 15), category: 'Utilities', icon: Icons.lightbulb),
-  Expense(id: 'e3', title: 'Movie Tickets', amount: 600.00, date: DateTime(2025, 4, 12), category: 'Entertainment', icon: Icons.movie),
-  Expense(id: 'e4', title: 'Dinner Out', amount: 1500.50, date: DateTime(2025, 4, 10), category: 'Food', icon: Icons.restaurant),
+  Expense(id: 'e1', title: 'Groceries', amount: 550.75, date: DateTime(2025, 4, 19), category: 'Food'),
+  Expense(id: 'e2', title: 'Electricity Bill', amount: 1200.00, date: DateTime(2025, 4, 15), category: 'Utilities'),
+  Expense(id: 'e3', title: 'Movie Tickets', amount: 600.00, date: DateTime(2025, 4, 12), category: 'Entertainment'),
+  Expense(id: 'e4', title: 'Dinner Out', amount: 1500.50, date: DateTime(2025, 4, 10), category: 'Food'),
 ];
 const double dummyBudget = 25000.00;
 const double dummySpent = 3851.25; // Sum of dummyExpenses
@@ -36,42 +38,96 @@ class _HomeScreenState extends State<HomeScreen> {
  // Initialize with the current date or a default like April 2025 from the image
  DateTime _currentMonth = DateTime(2025, 4); // April 2025
 
- // In a real app, you'd fetch expenses based on _currentMonth
- // For now, using dummy data defined above
- List<Expense> _monthlyExpenses = dummyExpenses;
- double _budget = dummyBudget;
- double _spent = dummySpent;
+ // Access shared expense data 
+ List<Expense> get _expenses => main_data.sharedExpenses;
+
+ // Calculate the total spent from the expenses
+ double get _totalSpent => _expenses.fold(0.0, (sum, expense) => sum + expense.amount);
 
  // --- State Management Methods ---
 
  // Navigate to the previous month
- void _goToPreviousMonth() {
+ void _handlePreviousMonth() {
   setState(() {
    _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
-   // TODO: Fetch or filter expenses for the new _currentMonth
-   // Example: _loadDataForMonth(_currentMonth);
-   print("Navigating to previous month: $_currentMonth"); // Placeholder action
   });
  }
 
  // Navigate to the next month
- void _goToNextMonth() {
+ void _handleNextMonth() {
   setState(() {
    _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
-   // TODO: Fetch or filter expenses for the new _currentMonth
-   // Example: _loadDataForMonth(_currentMonth);
-   print("Navigating to next month: $_currentMonth"); // Placeholder action
   });
  }
 
  // Placeholder for adding a new expense
- void _addExpense() {
-  // TODO: Implement navigation or show dialog to add an expense
-  print("Add Expense Tapped");
-  // Show a temporary snackbar message
-  ScaffoldMessenger.of(context).showSnackBar(
-   const SnackBar(content: Text('Navigate to Add Expense Screen (Not Implemented)')),
+ Future<void> _handleAddExpense() async {
+  final result = await showDialog<Expense>(
+   context: context,
+   builder: (context) => AddExpenseDialog(selectedDate: _currentMonth),
   );
+
+  if (result != null) {
+   setState(() {
+    _expenses.add(result);
+   });
+  }
+ }
+
+ Future<void> _handleEditExpense(String id) async {
+  final expenseIndex = _expenses.indexWhere((e) => e.id == id);
+  if (expenseIndex == -1) return;
+
+  final expense = _expenses[expenseIndex];
+  final result = await showDialog<Expense>(
+   context: context,
+   builder: (context) => AddExpenseDialog(
+    selectedDate: expense.date,
+    expense: expense,
+    isEditing: true,
+   ),
+  );
+
+  if (result != null) {
+   setState(() {
+    _expenses[expenseIndex] = result;
+   });
+  }
+ }
+
+ void _handleDeleteExpense(String id) {
+  showDialog<bool>(
+   context: context,
+   builder: (context) => AlertDialog(
+    title: const Text('Delete Expense'),
+    content: const Text('Are you sure you want to delete this expense?'),
+    actions: [
+     TextButton(
+      onPressed: () => Navigator.pop(context, false),
+      child: const Text('Cancel'),
+     ),
+     TextButton(
+      onPressed: () => Navigator.pop(context, true),
+      style: TextButton.styleFrom(
+       foregroundColor: AppColors.deleteRed,
+      ),
+      child: const Text('Delete'),
+     ),
+    ],
+   ),
+  ).then((confirmed) {
+   if (confirmed ?? false) {
+    setState(() {
+     _expenses.removeWhere((e) => e.id == id);
+    });
+   }
+  });
+ }
+
+ void _handleBudgetChanged(double newBudget) {
+  setState(() {
+   main_data.sharedBudget = newBudget;
+  });
  }
 
  // --- Build Method ---
@@ -80,92 +136,92 @@ class _HomeScreenState extends State<HomeScreen> {
   // Use a Scaffold specific to HomeScreen if it needs its own AppBar or FAB
   return Scaffold(
    backgroundColor: Colors.grey[50], // Use theme background color
-   body: CustomScrollView( // Use CustomScrollView for mixed sliver/non-sliver content
-    slivers: [
-     // --- Non-Scrolling Header Section ---
-     SliverToBoxAdapter(
-      child: Container( // Wrap in a container for background color if needed
-        color: Colors.white, // Example background for the top section
-        padding: const EdgeInsets.only(bottom: 10.0), // Padding below the card
-        child: Column(
+   appBar: AppBar(
+    title: const Text(
+     'Expense Tracker',
+     style: TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
+     ),
+    ),
+    backgroundColor: Colors.white,
+    elevation: 0,
+   ),
+   body: Column(
+    children: [
+     Container(
+      color: Colors.white,
+      child: Column(
+       children: [
+        MonthNavigator(
+         currentMonth: _currentMonth,
+         onPreviousMonth: _handlePreviousMonth,
+         onNextMonth: _handleNextMonth,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: BudgetSummaryCard(
+           budget: main_data.sharedBudget,
+           spent: _totalSpent,
+           month: _currentMonth,
+           onBudgetChanged: _handleBudgetChanged,
+          ),
+        ),
+       ],
+      ),
+     ),
+     Expanded(
+      child: ListView(
+       padding: const EdgeInsets.all(16),
+       children: [
+        Row(
+         mainAxisAlignment: MainAxisAlignment.spaceBetween,
          children: [
-          // Month Navigation Widget
-          MonthNavigator(
-           currentMonth: _currentMonth,
-           onPreviousMonth: _goToPreviousMonth,
-           onNextMonth: _goToNextMonth,
+          const Text(
+           'Expenses',
+           style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+           ),
           ),
-          // Budget Summary Card Widget
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0), // Add horizontal padding
-            child: BudgetSummaryCard(
-             budget: _budget, // Use dummy data
-             spent: _spent,   // Use dummy data
-             month: _currentMonth,
+          ElevatedButton.icon(
+           onPressed: _handleAddExpense,
+           icon: const Icon(Icons.add, size: 18),
+           label: const Text('Add Expense'),
+           style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryBlue,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(
+             borderRadius: BorderRadius.circular(20),
             ),
+           ),
           ),
-          // const SizedBox(height: 20), // Spacing moved below
          ],
         ),
-      ),
-     ),
-
-     // --- Expenses Section Header ---
-     SliverPadding(
-      padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 10.0), // Adjust padding
-      sliver: SliverToBoxAdapter(
-       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-         // "Expenses" Title
-         const Text(
-          'Expenses',
-          style: TextStyle(
-           fontSize: 18.0,
-           fontWeight: FontWeight.bold,
-           color: AppColors.textBlack, // Use color from constants
-          ),
-         ),
-         // "Add Expense" Button
-         ElevatedButton.icon(
-          onPressed: _addExpense,
-          icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add Expense'),
-          style: ElevatedButton.styleFrom(
-           backgroundColor: AppColors.primaryBlue, // Use color from constants
-           foregroundColor: Colors.white,
-           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0), // Rounded button
-           ),
-           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-           elevation: 2, // Add slight elevation
-          ),
-         ),
-        ],
-       ),
-      ),
-     ),
-
-     // --- Scrolling Expense List ---
-     SliverPadding(
-      // Add padding around the list, especially at the bottom
-      padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
-      sliver: SliverList(
-       // Use a delegate to build list items efficiently
-       delegate: SliverChildBuilderDelegate(
-        (context, index) {
-         // Get the specific expense for this index
-         final expense = _monthlyExpenses[index];
-         // Return the custom list item widget
-         // Add padding/margin around each item if needed within ExpenseListItem or here
-         return Padding(
-           padding: const EdgeInsets.only(bottom: 8.0), // Space between items
-           child: ExpenseListItem(expense: expense),
-         );
-        },
-        // Set the total number of items in the list
-        childCount: _monthlyExpenses.length,
-       ),
+        const SizedBox(height: 16),
+        _expenses.isEmpty 
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.only(top: 32.0),
+                child: Text(
+                  'No expenses yet. Add one to get started.',
+                  style: TextStyle(
+                    color: AppColors.darkGrey,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            )
+          : Column(
+              children: _expenses.map((expense) => ExpenseListItem(
+                expense: expense,
+                onEdit: () => _handleEditExpense(expense.id),
+                onDelete: () => _handleDeleteExpense(expense.id),
+              )).toList(),
+            ),
+       ],
       ),
      ),
     ],

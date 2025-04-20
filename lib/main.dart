@@ -5,6 +5,7 @@ import 'screens/home/home_screen.dart'; // Assuming this exists
 import 'screens/analytics_screen.dart';
 import 'screens/trends_screen.dart';
 import 'screens/settings_screen.dart';
+import 'models/expense.dart';
 // Assuming this exists and defines the colors used
 // import 'constants/app_colors.dart';
 
@@ -17,6 +18,32 @@ class AppColors {
  // static const Color backgroundGrey = Color(0xFFF5F5F5); // Example
 }
 
+// Shared expense data
+final List<Expense> sharedExpenses = [
+  Expense(
+    id: '1',
+    title: 'breakfast',
+    amount: 20.00,
+    date: DateTime(2025, 4, 18),
+    category: 'Transport',
+  ),
+  Expense(
+    id: '2',
+    title: 'shoes',
+    amount: 34.00,
+    date: DateTime(2025, 4, 18),
+    category: 'Transport',
+  ),
+  Expense(
+    id: '3',
+    title: 'breakfast',
+    amount: 12.00,
+    date: DateTime(2025, 4, 18),
+    category: 'Transport',
+  ),
+];
+
+double sharedBudget = 200.00;
 
 void main() {
   runApp(const MyApp());
