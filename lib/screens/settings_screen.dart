@@ -1,8 +1,124 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../main.dart' as main_data;
+import 'dart:convert';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'package:share_plus/share_plus.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+  
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool _notificationsEnabled = false;
+  bool _isExporting = false;
+  
+  Future<void> _exportData() async {
+    setState(() {
+      _isExporting = true;
+    });
+    
+    try {
+      // Convert expenses to JSON
+      final List<Map<String, dynamic>> expensesJson = main_data.sharedExpenses.map((expense) => {
+        'id': expense.id,
+        'title': expense.title,
+        'amount': expense.amount,
+        'date': expense.date.toIso8601String(),
+        'category': expense.category,
+      }).toList();
+      
+      final Map<String, dynamic> exportData = {
+        'expenses': expensesJson,
+        'budget': main_data.sharedBudget,
+        'exportDate': DateTime.now().toIso8601String(),
+      };
+      
+      final String jsonData = jsonEncode(exportData);
+      
+      // Create a temporary file
+      final directory = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final file = File('${directory.path}/expense_data_$timestamp.json');
+      
+      // Write JSON data to the file
+      await file.writeAsString(jsonData);
+      
+      // Share the file
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: 'Expense Tracker Data Export',
+      );
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Data exported: ${main_data.sharedExpenses.length} expenses'),
+          backgroundColor: AppColors.primaryBlue,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Export failed: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isExporting = false;
+      });
+    }
+  }
+  
+  void _clearAllData() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear All Data'),
+        content: const Text(
+          'Are you sure you want to clear all data? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              // Clear all expenses
+              main_data.sharedExpenses.clear();
+              // Reset budget to default
+              main_data.sharedBudget = 200.00;
+              
+              Navigator.pop(context);
+              
+              // Show confirmation
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('All data cleared successfully'),
+                  backgroundColor: AppColors.deleteRed,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              
+              // Refresh UI
+              setState(() {});
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.deleteRed,
+            ),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -19,110 +135,133 @@ class SettingsScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: ListView(
-        children: [
-          const _SectionHeader(title: 'General'),
-          _SettingsItem(
-            icon: Icons.person_outline,
-            title: 'Profile',
-            onTap: () {},
-          ),
-          _SettingsItem(
-            icon: Icons.notifications_outlined,
-            title: 'Notifications',
-            onTap: () {},
-          ),
-          _SettingsItem(
-            icon: Icons.color_lens_outlined,
-            title: 'Theme',
-            value: 'Light',
-            onTap: () {},
-          ),
-          
-          const _SectionHeader(title: 'Data'),
-          _SettingsItem(
-            icon: Icons.cloud_upload_outlined,
-            title: 'Backup',
-            onTap: () {},
-          ),
-          _SettingsItem(
-            icon: Icons.cloud_download_outlined,
-            title: 'Restore',
-            onTap: () {},
-          ),
-          _SettingsItem(
-            icon: Icons.delete_outline,
-            title: 'Clear Data',
-            onTap: () {},
-          ),
-          
-          const _SectionHeader(title: 'About'),
-          _SettingsItem(
-            icon: Icons.info_outline,
-            title: 'App Version',
-            value: '1.0.0',
-            onTap: null,
-          ),
-          _SettingsItem(
-            icon: Icons.help_outline,
-            title: 'Help & Support',
-            onTap: () {},
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  
-  const _SectionHeader({required this.title});
-  
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: AppColors.darkGrey,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // App Settings section
+            const Text(
+              'App Settings',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Notification settings
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.notifications_outlined, color: AppColors.darkGrey),
+                        const SizedBox(width: 12),
+                        const Text('Enable Notifications'),
+                      ],
+                    ),
+                    Switch(
+                      value: _notificationsEnabled,
+                      onChanged: (value) {
+                        setState(() {
+                          _notificationsEnabled = value;
+                        });
+                      },
+                      activeColor: AppColors.primaryBlue,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 32),
+            
+            // Data Management section
+            const Text(
+              'Data Management',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Export Data button
+            ElevatedButton.icon(
+              onPressed: _isExporting ? null : _exportData,
+              icon: _isExporting 
+                ? const SizedBox(
+                    width: 20, 
+                    height: 20, 
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    )
+                  )
+                : const Icon(Icons.upload_outlined),
+              label: Text(_isExporting ? 'Exporting...' : 'Export Data'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Clear All Data button
+            ElevatedButton.icon(
+              onPressed: _clearAllData,
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Clear All Data'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF4545), // Red
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 32),
+            
+            // App version and info
+            const Center(
+              child: Column(
+                children: [
+                  Text(
+                    'Expense Tracker v1.0.0',
+                    style: TextStyle(
+                      color: AppColors.darkGrey,
+                      fontSize: 14,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Data is stored locally on your device',
+                    style: TextStyle(
+                      color: AppColors.darkGrey,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-    );
-  }
-}
-
-class _SettingsItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? value;
-  final VoidCallback? onTap;
-  
-  const _SettingsItem({
-    required this.icon,
-    required this.title,
-    this.value,
-    this.onTap,
-  });
-  
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.primaryBlue),
-      title: Text(title),
-      trailing: value != null 
-        ? Text(
-            value!,
-            style: const TextStyle(
-              color: AppColors.darkGrey,
-              fontSize: 14,
-            ),
-          )
-        : const Icon(Icons.chevron_right),
-      onTap: onTap,
     );
   }
 }
