@@ -62,7 +62,7 @@ class ExpenseListItem extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '\$${expense.amount.toStringAsFixed(2)}',
+                  'Rs${expense.amount.toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,

@@ -105,7 +105,7 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                 decoration: const InputDecoration(
                   labelText: 'Amount',
                   border: OutlineInputBorder(),
-                  prefixText: '\$ ',
+                  prefixText: 'Rs ',
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {

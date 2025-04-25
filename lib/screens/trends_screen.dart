@@ -104,7 +104,7 @@ class _TrendsScreenState extends State<TrendsScreen> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'This chart shows your spending trends over the past 6 months.',
+                    'This chart shows your spending trends over the past 3 months.',
                     style: TextStyle(
                       color: AppColors.darkGrey,
                       fontSize: 14,
@@ -131,7 +131,7 @@ class _BarChart extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$');
+    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: 'Rs');
     final dateFormat = DateFormat('MMMM');
     
     // Calculate step size for y-axis
@@ -195,7 +195,7 @@ class _BarChart extends StatelessWidget {
                         ),
                       ),
                       const Text(
-                        '\$0',
+                        'Rs0',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.darkGrey,

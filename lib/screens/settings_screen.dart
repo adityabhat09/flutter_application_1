@@ -161,11 +161,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
+                    const Row(
                       children: [
-                        const Icon(Icons.notifications_outlined, color: AppColors.darkGrey),
-                        const SizedBox(width: 12),
-                        const Text('Enable Notifications'),
+                        Icon(Icons.notifications_outlined, color: AppColors.darkGrey),
+                        SizedBox(width: 12),
+                        Text('Enable Notifications'),
                       ],
                     ),
                     Switch(

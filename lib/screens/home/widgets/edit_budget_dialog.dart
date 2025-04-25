@@ -55,7 +55,7 @@ class _EditBudgetDialogState extends State<EditBudgetDialog> {
                 decoration: const InputDecoration(
                   labelText: 'Monthly Budget',
                   border: OutlineInputBorder(),
-                  prefixText: '\$ ',
+                  prefixText: 'Rs ',
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {

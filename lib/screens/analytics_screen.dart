@@ -54,7 +54,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$');
+    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: 'Rs');
     
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -206,7 +206,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                                                 const SizedBox(width: 8),
                                                 Expanded(
                                                   child: Text(
-                                                    '${entry.key} ${percentage}%',
+                                                    '${entry.key} $percentage%',
                                                     style: const TextStyle(
                                                       fontSize: 14,
                                                     ),

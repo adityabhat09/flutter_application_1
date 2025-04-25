@@ -37,7 +37,7 @@ class BudgetSummaryCard extends StatelessWidget {
     final double remaining = budget - spent;
     final bool isBudgetExceeded = spent > budget;
     final percentSpent = (progress * 100).toStringAsFixed(1);
-    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: '\$'); // Adjust locale/symbol as needed
+    final currencyFormat = NumberFormat.currency(locale: 'en_US', symbol: 'Rs'); // Changed from '\$' to 'Rs'
 
     return Card(
       margin: EdgeInsets.zero,
